@@ -13,13 +13,16 @@ function ToggleTabs()
     if &expandtab
         set softtabstop=0
         set noexpandtab
-        echom "Tabs enabled."
+        echom "Tab will insert a real tab."
     else
         set softtabstop=4
         set expandtab
-        echom "Tabs disabled."
+        echom "Tab will insert spaces."
     endif
 endfunction
+
+" Map ToggleTabs() to the Tab key in normal mode
+nmap <Tab> mz:call ToggleTabs()<CR>
 
 
 " Put tabs back to normal for makefiles because make requires real tabs.
