@@ -9,7 +9,7 @@ set list
 set listchars=tab:>-
 
 " Toggle between tabs and spaces
-function ToggleTabs()
+function! ToggleTabs()
     if &expandtab
         set softtabstop=0
         set noexpandtab
@@ -23,6 +23,34 @@ endfunction
 
 " Map ToggleTabs() to the Tab key in normal mode
 nmap <Tab> mz:call ToggleTabs()<CR>
+
+" Look in each directory above the opened file for a .tabs or .spaces file
+" If we find a .spaces file, then use spaces.
+" If we find a .tabs file, then use real tabs.
+" If we don't find anything, then use spaces.
+function! ChooseDefaultTabs(dir)
+    let x = trim(system("[ -f " . a:dir . "/.spaces ]"))
+
+    if v:shell_error == 0
+        return "spaces"
+    endif
+
+    let y = trim(system("[ -f " . a:dir . "/.tabs ]"))
+
+    if v:shell_error != 0
+        if a:dir == "/"
+            return "spaces"
+        else
+            return ChooseDefaultTabs(trim(system("dirname " . a:dir)))
+        endif
+    else
+        return "tabs"
+    endif
+endfunction
+
+if ChooseDefaultTabs(expand("%:p:h")) == "tabs"
+    silent :call ToggleTabs()
+endif
 
 
 " Put tabs back to normal for makefiles because make requires real tabs.
