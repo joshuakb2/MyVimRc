@@ -4,3 +4,6 @@
 [submodule "pack/typescript/start/typescript-vim"]
 	path = pack/typescript/start/typescript-vim
 	url = https://github.com/leafgarland/typescript-vim.git
+[submodule "pack/git-plugins/start/vim-elm-syntax"]
+	path = pack/git-plugins/start/vim-elm-syntax
+	url = https://github.com/andys8/vim-elm-syntax.git
