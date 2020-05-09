@@ -12,10 +12,12 @@ set listchars=tab:>-
 function! ToggleTabs()
     if &expandtab
         set softtabstop=0
+        let &shiftwidth=&tabstop
         set noexpandtab
         echom "Tab will insert a real tab."
     else
         set softtabstop=4
+        set shiftwidth=4
         set expandtab
         echom "Tab will insert spaces."
     endif
@@ -60,7 +62,7 @@ endif
 " Put tabs back to normal for makefiles because make requires real tabs.
 if has("autocmd")
     filetype plugin indent on
-    autocmd FileType make set tabstop=8 shiftwidth=8 softtabstop=0 noexpandtab
+    autocmd FileType make set tabstop=4 shiftwidth=4 softtabstop=0 noexpandtab
 endif
 
 " Change the color of comments so they aren't dark blue (impossible to read)
