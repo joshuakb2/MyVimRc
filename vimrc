@@ -54,7 +54,7 @@ function! ChooseDefaultTabs(dir)
     endif
 endfunction
 
-if ChooseDefaultTabs(expand("%:p:h")) == "tabs"
+if isdirectory(expand("%:p:h")) && ChooseDefaultTabs(expand("%:p:h")) == "tabs"
     silent :call ToggleTabs()
 endif
 
