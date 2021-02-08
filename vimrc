@@ -76,3 +76,11 @@ set mouse=a
 
 " Add the :JSHint plugin for checking JS code.
 set runtimepath+=~/.vim/bundle/jshint2.vim/
+
+" tmux will send xterm-style keys when its xterm-keys option is on
+if &term =~ '^screen'
+    execute "set <xUp>=\e[1;*A"
+    execute "set <xDown>=\e[1;*B"
+    execute "set <xRight>=\e[1;*C"
+    execute "set <xLeft>=\e[1;*D"
+endif
