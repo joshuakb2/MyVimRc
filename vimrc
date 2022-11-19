@@ -43,15 +43,15 @@ function! ChooseDefaultTabs(dir)
 
     let y = RunCmd("[ -f " . a:dir . "/.tabs ]")
 
-    if v:shell_error != 0
-        if a:dir == "/"
-            return "spaces"
-        else
-            return ChooseDefaultTabs(RunCmd("dirname " . a:dir))
-        endif
-    else
+    if v:shell_error == 0
         return "tabs"
     endif
+
+    if a:dir == "/"
+        return "spaces"
+    endif
+
+    return ChooseDefaultTabs(RunCmd("dirname " . a:dir))
 endfunction
 
 if isdirectory(expand("%:p:h")) && ChooseDefaultTabs(expand("%:p:h")) == "tabs"
