@@ -84,3 +84,21 @@ if &term =~ '^screen'
     execute "set <xRight>=\e[1;*C"
     execute "set <xLeft>=\e[1;*D"
 endif
+
+" set true colors
+" if has("termguicolors")
+"     set t_8f=[38;2;%lu;%lu;%lum
+"     set t_8b=[48;2;%lu;%lu;%lum
+"     set termguicolors
+" endif
+
+" Plugins
+call plug#begin()
+Plug 'pangloss/vim-javascript'
+Plug 'leafgarland/typescript-vim'
+Plug 'peitalin/vim-jsx-typescript'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+let g:coc_global_extensions = [
+    \ 'coc-tsserver'
+    \ ]
+call plug#end()
