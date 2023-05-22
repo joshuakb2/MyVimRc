@@ -69,7 +69,7 @@ endif
 hi Comment ctermfg=2
 
 " Always show line numbers
-set number
+set number relativenumber
 
 " Accept mouse input for highlighting visual blocks and scrolling
 set mouse=a
@@ -133,3 +133,5 @@ nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 nmap <silent> rs <Plug>(coc-rename)
 nmap <silent> ca <Plug>(coc-codeaction)
+nmap <silent> cen <Plug>(coc-diagnostic-next)
+nmap <silent> cep <Plug>(coc-diagnostic-prev)
