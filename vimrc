@@ -23,6 +23,8 @@ function! ToggleTabs()
     endif
 endfunction
 
+" Map CTRL-P to the opposite of CTRL-O -- go forward in cursor jump list
+nnoremap <c-p> <tab>
 " Map ToggleTabs() to the Tab key in normal mode
 nmap <Tab> mz:call ToggleTabs()<CR>
 
@@ -135,3 +137,4 @@ nmap <silent> rs <Plug>(coc-rename)
 nmap <silent> ca <Plug>(coc-codeaction)
 nmap <silent> cen <Plug>(coc-diagnostic-next)
 nmap <silent> cep <Plug>(coc-diagnostic-prev)
+nnoremap <silent> <Space> :set hlsearch!<CR>
