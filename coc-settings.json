@@ -2,6 +2,7 @@
 	"suggest.noselect": true,
 	"tsserver.useLocalTsdk": true,
 	"tsserver.log": "normal",
+	"tsserver.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": true,
 	"languageserver": {
 		"ccls": {
 			"command": "ccls",

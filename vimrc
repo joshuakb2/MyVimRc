@@ -60,7 +60,6 @@ if isdirectory(expand("%:p:h")) && ChooseDefaultTabs(expand("%:p:h")) == "tabs"
     silent :call ToggleTabs()
 endif
 
-
 " Put tabs back to normal for makefiles because make requires real tabs.
 if has("autocmd")
     filetype plugin indent on
@@ -76,9 +75,6 @@ set number relativenumber
 " Accept mouse input for highlighting visual blocks and scrolling
 set mouse=a
 
-" Add the :JSHint plugin for checking JS code.
-set runtimepath+=~/.vim/bundle/jshint2.vim/
-
 " tmux will send xterm-style keys when its xterm-keys option is on
 if &term =~ '^screen'
     execute "set <xUp>=\e[1;*A"
@@ -86,6 +82,9 @@ if &term =~ '^screen'
     execute "set <xRight>=\e[1;*C"
     execute "set <xLeft>=\e[1;*D"
 endif
+
+noremap <silent> <C-J> <C-E>
+noremap <silent> <C-K> <C-Y>
 
 " set true colors
 " if has("termguicolors")
@@ -101,7 +100,8 @@ Plug 'leafgarland/typescript-vim'
 Plug 'peitalin/vim-jsx-typescript'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 let g:coc_global_extensions = [
-    \ 'coc-tsserver'
+    \ 'coc-tsserver',
+    \ 'coc-eslint',
     \ ]
 call plug#end()
 
@@ -128,7 +128,9 @@ inoremap <silent><expr> <TAB>
       \ coc#refresh()
 inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 
-" GoTo code navigation
+inoremap <expr> <cr> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
+inoremap <silent><expr> <cr> coc#pum#visible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
+
 nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
@@ -138,3 +140,4 @@ nmap <silent> ca <Plug>(coc-codeaction)
 nmap <silent> cen <Plug>(coc-diagnostic-next)
 nmap <silent> cep <Plug>(coc-diagnostic-prev)
 nnoremap <silent> <Space> :set hlsearch!<CR>
+vmap <silent> fs <Plug>(coc-format-selected)
