@@ -28,6 +28,10 @@ nnoremap <c-p> <tab>
 " Map ToggleTabs() to the Tab key in normal mode
 nmap <Tab> mz:call ToggleTabs()<CR>
 
+" Map Ctrl-W h and Ctrl-W l to switch between the left and right windows
+nnoremap <c-w>h <c-w><Left>
+nnoremap <c-w>l <c-w><Right>
+
 function! RunCmd(cmd)
     return substitute(system(a:cmd), '\n$', '', '')
 endfunction
@@ -99,11 +103,23 @@ Plug 'pangloss/vim-javascript'
 Plug 'leafgarland/typescript-vim'
 Plug 'peitalin/vim-jsx-typescript'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'tpope/vim-fugitive'
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-lua/telescope.nvim', { 'branch': '0.1.x' }
+Plug 'ahmedkhalf/project.nvim'
 let g:coc_global_extensions = [
     \ 'coc-tsserver',
     \ 'coc-eslint',
     \ ]
 call plug#end()
+
+lua << EOF
+require('telescope').setup{
+    defaults = {
+        file_ignore_patterns = {"node_modules", ".git"}
+    }
+}
+EOF
 
 " Use K to show documentation in preview window
 nnoremap <silent> K :call <SID>show_documentation()<CR>
@@ -128,6 +144,9 @@ inoremap <silent><expr> <TAB>
       \ coc#refresh()
 inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 
+" Open or refresh the completion list
+inoremap <silent><expr> <c-space> coc#refresh()
+
 inoremap <expr> <cr> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
 inoremap <silent><expr> <cr> coc#pum#visible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
 
@@ -136,8 +155,11 @@ nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 nmap <silent> rs <Plug>(coc-rename)
-nmap <silent> ca <Plug>(coc-codeaction)
+nmap <silent> <Leader>ca <Plug>(coc-codeaction)
 nmap <silent> cen <Plug>(coc-diagnostic-next)
 nmap <silent> cep <Plug>(coc-diagnostic-prev)
 nnoremap <silent> <Space> :set hlsearch!<CR>
 vmap <silent> fs <Plug>(coc-format-selected)
+vmap <silent> <Leader>dp diffput
+nnoremap <Leader>ff <cmd>Telescope find_files<cr>
+nnoremap <Leader>fg <cmd>Telescope live_grep<cr>
