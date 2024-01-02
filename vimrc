@@ -1,3 +1,6 @@
+colorscheme vim
+hi Visual term=reverse cterm=reverse guibg=Grey
+
 " Fix tabs by doing the following:
 "   Making tabs appear 4 spaces wide (max. Shorter if the tab doesn't begin at
 "   a multiple of 4 offset from the start of the line)
@@ -7,6 +10,8 @@
 set tabstop=4 softtabstop=0 expandtab shiftwidth=4 smarttab
 set list
 set listchars=tab:>-
+
+set wildmode=longest:full,full
 
 " Toggle between tabs and spaces
 function! ToggleTabs()
@@ -79,6 +84,9 @@ set number relativenumber
 " Accept mouse input for highlighting visual blocks and scrolling
 set mouse=a
 
+" At least 3 lines above/below cursor when scrolling
+set so=3
+
 " tmux will send xterm-style keys when its xterm-keys option is on
 if &term =~ '^screen'
     execute "set <xUp>=\e[1;*A"
@@ -99,6 +107,7 @@ noremap <silent> <C-K> <C-Y>
 
 " Plugins
 call plug#begin()
+Plug 'tpope/vim-commentary'
 Plug 'pangloss/vim-javascript'
 Plug 'leafgarland/typescript-vim'
 Plug 'peitalin/vim-jsx-typescript'
@@ -107,10 +116,19 @@ Plug 'tpope/vim-fugitive'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-lua/telescope.nvim', { 'branch': '0.1.x' }
 Plug 'ahmedkhalf/project.nvim'
+Plug 'neovim/nvim-lspconfig'
+Plug 'luochen1990/rainbow'
+Plug 'https://github.com/tamton-aquib/duck.nvim.git'
+let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowToggle
 let g:coc_global_extensions = [
     \ 'coc-tsserver',
     \ 'coc-eslint',
+    \ 'coc-rust-analyzer',
+    \ 'coc-zls',
     \ ]
+let g:LanguageClient_serverCommands = {
+    \ 'rust': ['rust-analyzer'],
+\ }
 call plug#end()
 
 lua << EOF
@@ -119,6 +137,10 @@ require('telescope').setup{
         file_ignore_patterns = {"node_modules", ".git"}
     }
 }
+require('project_nvim').setup{
+    patterns = {'.git', '.project_root'}
+}
+require'lspconfig'.solargraph.setup{}
 EOF
 
 " Use K to show documentation in preview window
@@ -156,10 +178,13 @@ nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 nmap <silent> rs <Plug>(coc-rename)
 nmap <silent> <Leader>ca <Plug>(coc-codeaction)
-nmap <silent> cen <Plug>(coc-diagnostic-next)
-nmap <silent> cep <Plug>(coc-diagnostic-prev)
+nmap <silent> <Leader>df <Plug>(coc-diagnostic-next)
+nmap <silent> <Leader>dr <Plug>(coc-diagnostic-prev)
+nmap <silent> <Leader>di :CocDiagnostics<CR>
 nnoremap <silent> <Space> :set hlsearch!<CR>
 vmap <silent> fs <Plug>(coc-format-selected)
 vmap <silent> <Leader>dp diffput
 nnoremap <Leader>ff <cmd>Telescope find_files<cr>
 nnoremap <Leader>fg <cmd>Telescope live_grep<cr>
+nnoremap <Leader>kk :let @k=@"<CR>
+nnoremap <silent> <leader>rc :lua require("duck").hatch("🐈")<CR>
