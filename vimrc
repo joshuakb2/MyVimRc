@@ -75,6 +75,17 @@ if has("autocmd")
     autocmd FileType make set tabstop=4 shiftwidth=4 softtabstop=0 noexpandtab
 endif
 
+fun! TrimWhitespace()
+    let l:save = winsaveview()
+    keeppatterns %s/\s\+$//e
+    call winrestview(l:save)
+endfun
+
+" Always trim trailing whitespace before saving a file
+if has("autocmd")
+    autocmd BufWritePre * call TrimWhitespace()
+endif
+
 " Change the color of comments so they aren't dark blue (impossible to read)
 hi Comment ctermfg=2
 
