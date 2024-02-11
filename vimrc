@@ -28,6 +28,11 @@ function! ToggleTabs()
     endif
 endfunction
 
+" Run with :call WorkaroundLuaHighlightBug()
+function! WorkaroundLuaHighlightBug()
+    execute '!curl -sS https://raw.githubusercontent.com/neovim/neovim/v0.7.2/runtime/syntax/lua.vim | sudo tee $VIMRUNTIME/syntax/lua.vim'
+endfunction
+
 " Map CTRL-P to the opposite of CTRL-O -- go forward in cursor jump list
 nnoremap <c-p> <tab>
 " Map ToggleTabs() to the Tab key in normal mode
