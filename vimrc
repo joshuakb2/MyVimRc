@@ -135,6 +135,7 @@ Plug 'ahmedkhalf/project.nvim'
 Plug 'neovim/nvim-lspconfig'
 Plug 'luochen1990/rainbow'
 Plug 'https://github.com/tamton-aquib/duck.nvim.git'
+Plug 'jeetsukumaran/vim-indentwise'
 let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowToggle
 let g:coc_global_extensions = [
     \ 'coc-tsserver',
