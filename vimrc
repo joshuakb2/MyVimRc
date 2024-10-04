@@ -1,4 +1,3 @@
-colorscheme vim
 hi Visual term=reverse cterm=reverse guibg=Grey
 
 " Fix tabs by doing the following:
@@ -86,8 +85,9 @@ fun! TrimWhitespace()
     call winrestview(l:save)
 endfun
 
-" Always trim trailing whitespace before saving a file
-if has("autocmd")
+" Always trim trailing whitespace before saving a file, unless
+" VIM_LEAVE_WHITESPACE_ALONE is defined.
+if has("autocmd") && empty($VIM_LEAVE_WHITESPACE_ALONE)
     autocmd BufWritePre * call TrimWhitespace()
 endif
 
@@ -136,16 +136,25 @@ Plug 'neovim/nvim-lspconfig'
 Plug 'luochen1990/rainbow'
 Plug 'https://github.com/tamton-aquib/duck.nvim.git'
 Plug 'jeetsukumaran/vim-indentwise'
+Plug 'walm/jshint.vim'
+Plug 'slim-template/vim-slim'
+Plug 'tommcdo/vim-lion'
+Plug 'evanleck/vim-svelte'
+Plug 'coc-extensions/coc-svelte'
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'nvim-treesitter/nvim-treesitter-context'
 let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowToggle
 let g:coc_global_extensions = [
     \ 'coc-tsserver',
     \ 'coc-eslint',
     \ 'coc-rust-analyzer',
     \ 'coc-zls',
+    \ 'coc-svelte',
     \ ]
 let g:LanguageClient_serverCommands = {
     \ 'rust': ['rust-analyzer'],
 \ }
+let b:lion_squeeze_spaces = 1 " allow lion to reduce number of spaces when aligning columns
 call plug#end()
 
 lua << EOF
@@ -158,7 +167,11 @@ require('project_nvim').setup{
     patterns = {'.git', '.project_root'}
 }
 require'lspconfig'.solargraph.setup{}
+-- require'lspconfig'.ruby_lsp.setup{}
+require'treesitter-context'.setup{}
 EOF
+
+hi TreesitterContext guibg=grey
 
 " Use K to show documentation in preview window
 nnoremap <silent> K :call <SID>show_documentation()<CR>
@@ -187,9 +200,10 @@ inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 inoremap <silent><expr> <c-space> coc#refresh()
 
 inoremap <expr> <c-cr> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
-" inoremap <silent><expr> <cr> coc#pum#visible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
+" inoremap <silent><expr> <c-cr> coc#pum#visible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
 
 nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gs :CocCommand tsserver.goToSourceDefinition<CR>
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
@@ -205,3 +219,4 @@ nnoremap <Leader>ff <cmd>Telescope find_files<cr>
 nnoremap <Leader>fg <cmd>Telescope live_grep<cr>
 nnoremap <Leader>kk :let @k=@"<CR>
 nnoremap <silent> <leader>rc :lua require("duck").hatch("🐈")<CR>
+nnoremap <silent> <c-w><c-p> <Plug>(coc-float-jump)
