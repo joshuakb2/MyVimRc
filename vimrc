@@ -132,7 +132,7 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'tpope/vim-fugitive'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-lua/telescope.nvim', { 'branch': '0.1.x' }
-Plug 'ahmedkhalf/project.nvim'
+Plug 'DrKJeff16/project.nvim'
 Plug 'neovim/nvim-lspconfig'
 Plug 'luochen1990/rainbow'
 Plug 'https://github.com/tamton-aquib/duck.nvim.git'
