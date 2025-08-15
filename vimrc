@@ -1,3 +1,4 @@
+colorscheme vim
 hi Visual term=reverse cterm=reverse guibg=Grey
 
 " Fix tabs by doing the following:
