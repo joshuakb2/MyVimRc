@@ -168,7 +168,6 @@ require('project_nvim').setup{
     patterns = {'.git', '.project_root'}
 }
 require'lspconfig'.solargraph.setup{}
--- require'lspconfig'.ruby_lsp.setup{}
 require'treesitter-context'.setup{}
 EOF
 
@@ -214,7 +213,8 @@ nmap <silent> <Leader>df <Plug>(coc-diagnostic-next)
 nmap <silent> <Leader>dr <Plug>(coc-diagnostic-prev)
 nmap <silent> <Leader>di :CocDiagnostics<CR>
 nnoremap <silent> <Space> :set hlsearch!<CR>
-vmap <silent> fs <Plug>(coc-format-selected)
+vmap <silent> <Leader>fs <Plug>(coc-format-selected)
+nnoremap <silent> <Leader>fd <Plug>(coc-format)
 vmap <silent> <Leader>dp diffput
 nnoremap <Leader>ff <cmd>Telescope find_files<cr>
 nnoremap <Leader>fg <cmd>Telescope live_grep<cr>
