@@ -1,4 +1,3 @@
-colorscheme vim
 hi Visual term=reverse cterm=reverse guibg=Grey
 
 " Fix tabs by doing the following:
@@ -144,6 +143,7 @@ Plug 'evanleck/vim-svelte'
 Plug 'coc-extensions/coc-svelte'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'nvim-treesitter/nvim-treesitter-context'
+Plug 'joshuakb2/nvim-catppuccin' " Color scheme
 let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowToggle
 let g:coc_global_extensions = [
     \ 'coc-tsserver',
@@ -169,6 +169,17 @@ require('project_nvim').setup{
 }
 require'lspconfig'.solargraph.setup{}
 require'treesitter-context'.setup{}
+require'catppuccin'.setup {
+	transparent_background = true,
+}
+require'nvim-treesitter.configs'.setup {
+	ensure_installed = { "c", "lua", "vim", "vimdoc", "markdown", "markdown_inline", "javascript", "tsx", "typescript", "bash", "nix" },
+	highlight = {
+		enable = true,
+		disable = { "jsx" },
+	}
+}
+vim.cmd.colorscheme 'catppuccin'
 EOF
 
 hi TreesitterContext guibg=grey
