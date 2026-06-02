@@ -99,6 +99,7 @@ set number relativenumber
 
 " Accept mouse input for highlighting visual blocks and scrolling
 set mouse=a
+set updatetime=300
 
 " At least 3 lines above/below cursor when scrolling
 set so=3
@@ -124,13 +125,17 @@ noremap <silent> <C-K> <C-Y>
 " Plugins
 call plug#begin()
 Plug 'tpope/vim-commentary'
-Plug 'pangloss/vim-javascript'
-Plug 'leafgarland/typescript-vim'
-Plug 'peitalin/vim-jsx-typescript'
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
+" Plug 'pangloss/vim-javascript'
+" Plug 'leafgarland/typescript-vim'
+" Plug 'peitalin/vim-jsx-typescript'
+Plug 'hrsh7th/nvim-cmp'
+Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'hrsh7th/cmp-buffer'
+Plug 'L3MON4D3/LuaSnip'
+Plug 'saadparwaiz1/cmp_luasnip'
 Plug 'tpope/vim-fugitive'
 Plug 'nvim-lua/plenary.nvim'
-Plug 'nvim-lua/telescope.nvim', { 'branch': '0.1.x' }
+Plug 'nvim-lua/telescope.nvim'
 Plug 'DrKJeff16/project.nvim'
 Plug 'neovim/nvim-lspconfig'
 Plug 'luochen1990/rainbow'
@@ -140,21 +145,11 @@ Plug 'walm/jshint.vim'
 Plug 'slim-template/vim-slim'
 Plug 'tommcdo/vim-lion'
 Plug 'evanleck/vim-svelte'
-Plug 'coc-extensions/coc-svelte'
-Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'sveltejs/language-tools', {'do': 'npm install && npm run build'}
+Plug 'nvim-treesitter/nvim-treesitter'
 Plug 'nvim-treesitter/nvim-treesitter-context'
 Plug 'joshuakb2/nvim-catppuccin' " Color scheme
 let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowToggle
-let g:coc_global_extensions = [
-    \ 'coc-tsserver',
-    \ 'coc-eslint',
-    \ 'coc-rust-analyzer',
-    \ 'coc-zls',
-    \ 'coc-svelte',
-    \ ]
-let g:LanguageClient_serverCommands = {
-    \ 'rust': ['rust-analyzer'],
-\ }
 let b:lion_squeeze_spaces = 1 " allow lion to reduce number of spaces when aligning columns
 call plug#end()
 
@@ -164,71 +159,166 @@ require('telescope').setup{
         file_ignore_patterns = {"node_modules", ".git"}
     }
 }
-require('project_nvim').setup{
+require('project').setup{
     patterns = {'.git', '.project_root'}
 }
-require'lspconfig'.solargraph.setup{}
 require'treesitter-context'.setup{}
 require'catppuccin'.setup {
 	transparent_background = true,
 }
-require'nvim-treesitter.configs'.setup {
-	ensure_installed = { "c", "lua", "vim", "vimdoc", "markdown", "markdown_inline", "javascript", "tsx", "typescript", "bash", "nix" },
-	highlight = {
-		enable = true,
-		disable = { "jsx" },
-	}
-}
+vim.api.nvim_create_autocmd('FileType', {
+	callback = function()
+		pcall(vim.treesitter.start)
+	end,
+})
 vim.cmd.colorscheme 'catppuccin'
+
+-- LSP setup
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
+
+local servers = { 'rust_analyzer', 'zls', 'eslint', 'svelte', 'jsonls', 'vimls', 'ccls' }
+for _, server in ipairs(servers) do
+    vim.lsp.config(server, {
+        capabilities = capabilities,
+    })
+end
+
+local function has_native_ts_preview(root)
+    local path = root .. '/node_modules/@typescript/native-preview/package.json'
+    local f = io.open(path, 'r')
+    if not f then return false end
+    f:close()
+    return true
+end
+
+local ts_filetypes = { 'typescript', 'typescriptreact', 'javascript', 'javascriptreact' }
+
+-- ts_ls: always runs for full IDE features (code actions, auto-import, etc.)
+vim.lsp.config('ts_ls', {
+    capabilities = capabilities,
+    filetypes = ts_filetypes,
+    root_markers = { 'tsconfig.json', 'jsconfig.json', 'package.json' },
+    on_attach = function(client, bufnr)
+        local root = vim.fs.root(bufnr, { 'tsconfig.json', 'jsconfig.json', 'package.json' })
+        if root and has_native_ts_preview(root) then
+            -- Let tsgo handle these in TS 7 projects
+            client.server_capabilities.hoverProvider = false
+            client.server_capabilities.definitionProvider = false
+            client.server_capabilities.typeDefinitionProvider = false
+            client.server_capabilities.implementationProvider = false
+            client.server_capabilities.referencesProvider = false
+            client.handlers['textDocument/publishDiagnostics'] = function() end
+        end
+    end,
+})
+
+-- tsgo: runs alongside ts_ls in TS 7 projects for faster diagnostics.
+local tsgo_capabilities = vim.deepcopy(capabilities)
+tsgo_capabilities.general = tsgo_capabilities.general or {}
+tsgo_capabilities.general.positionEncodings = { 'utf-16' }
+
+vim.lsp.config('tsgo', {
+    capabilities = tsgo_capabilities,
+    filetypes = ts_filetypes,
+    root_markers = { 'tsconfig.json', 'jsconfig.json', 'package.json' },
+    on_attach = function(client)
+        -- Let ts_ls handle these; tsgo handles diagnostics + navigation
+        client.server_capabilities.codeActionProvider = false
+        client.server_capabilities.completionProvider = nil
+        client.server_capabilities.renameProvider = false
+    end,
+})
+
+-- Only enable tsgo in projects with @typescript/native-preview
+vim.api.nvim_create_autocmd('FileType', {
+    pattern = ts_filetypes,
+    callback = function(ev)
+        local root = vim.fs.root(ev.buf, { 'package.json' })
+        if root and has_native_ts_preview(root) then
+            vim.lsp.config('tsgo', {
+                cmd = { root .. '/node_modules/.bin/tsgo', '--lsp', '--stdio' },
+            })
+            vim.lsp.enable('tsgo', true)
+        end
+    end,
+})
+
+vim.lsp.enable(servers)
+vim.lsp.enable('ts_ls')
+
+-- nvim-cmp setup
+local cmp = require('cmp')
+local luasnip = require('luasnip')
+
+cmp.setup {
+    snippet = {
+        expand = function(args)
+            luasnip.lsp_expand(args.body)
+        end,
+    },
+    mapping = cmp.mapping.preset.insert({
+        ['<Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+                cmp.select_next_item()
+            else
+                fallback()
+            end
+        end, { 'i', 's' }),
+        ['<S-Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+                cmp.select_prev_item()
+            else
+                fallback()
+            end
+        end, { 'i', 's' }),
+        ['<C-Space>'] = cmp.mapping.complete(),
+        ['<C-CR>'] = cmp.mapping.confirm({ select = true }),
+    }),
+    sources = cmp.config.sources({
+        { name = 'nvim_lsp' },
+        { name = 'luasnip' },
+    }, {
+        { name = 'buffer' },
+    }),
+}
+
+vim.diagnostic.config({
+    virtual_text = true,
+})
+
+-- vim.api.nvim_create_autocmd('CursorHold', {
+--     callback = function()
+--         vim.diagnostic.open_float(nil, { focusable = false })
+--     end,
+-- })
+
+function open_float()
+    vim.schedule(function()
+        vim.diagnostic.open_float({ scope = 'cursor' })
+    end)
+end
+
+require('tsgo_project_diagnostics')
 EOF
 
 hi TreesitterContext guibg=grey
 
-" Use K to show documentation in preview window
-nnoremap <silent> K :call <SID>show_documentation()<CR>
-
-function! s:show_documentation()
-  if (index(['vim','help'], &filetype) >= 0)
-    execute 'h '.expand('<cword>')
-  else
-    call CocAction('doHover')
-  endif
-endfunction
-
-function! CheckBackspace() abort
-  let col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~# '\s'
-endfunction
-
-" Use tab for trigger completion with characters ahead and navigate
-inoremap <silent><expr> <TAB>
-      \ coc#pum#visible() ? coc#pum#next(1) :
-      \ CheckBackspace() ? "\<Tab>" :
-      \ coc#refresh()
-inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
-
-" Open or refresh the completion list
-inoremap <silent><expr> <c-space> coc#refresh()
-
-inoremap <expr> <c-cr> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
-" inoremap <silent><expr> <c-cr> coc#pum#visible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
-
-nmap <silent> gd <Plug>(coc-definition)
-nmap <silent> gs :CocCommand tsserver.goToSourceDefinition<CR>
-nmap <silent> gy <Plug>(coc-type-definition)
-nmap <silent> gi <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
-nmap <silent> rs <Plug>(coc-rename)
-nmap <silent> <Leader>ca <Plug>(coc-codeaction)
-nmap <silent> <Leader>df <Plug>(coc-diagnostic-next)
-nmap <silent> <Leader>dr <Plug>(coc-diagnostic-prev)
-nmap <silent> <Leader>di :CocDiagnostics<CR>
+nmap <silent> gd <cmd>lua vim.lsp.buf.definition()<CR>
+nmap <silent> gy <cmd>lua vim.lsp.buf.type_definition()<CR>
+nmap <silent> gi <cmd>lua vim.lsp.buf.implementation()<CR>
+nmap <silent> gr <cmd>lua vim.lsp.buf.references()<CR>
+nmap <silent> rs <cmd>lua vim.lsp.buf.rename()<CR>
+nmap <silent> <Leader>ca <cmd>lua vim.lsp.buf.code_action()<CR>
+nmap <silent> <Leader>df <cmd>lua vim.diagnostic.jump({ count = 1, on_jump = open_float })<CR>
+nmap <silent> <Leader>dr <cmd>lua vim.diagnostic.jump({ count = -1, on_jump = open_float })<CR>
+" (see tsgo_project_diagnostics.lua)
+" nmap <silent> <Leader>di <cmd>lua vim.diagnostic.setqflist()<CR>
+nnoremap <silent> K <cmd>lua vim.lsp.buf.hover()<CR>
 nnoremap <silent> <Space> :set hlsearch!<CR>
-vmap <silent> <Leader>fs <Plug>(coc-format-selected)
-nnoremap <silent> <Leader>fd <Plug>(coc-format)
+vmap <silent> <Leader>fs <cmd>lua vim.lsp.buf.format()<CR>
+nnoremap <silent> <Leader>fd <cmd>lua vim.lsp.buf.format()<CR>
 vmap <silent> <Leader>dp diffput
 nnoremap <Leader>ff <cmd>Telescope find_files<cr>
 nnoremap <Leader>fg <cmd>Telescope live_grep<cr>
 nnoremap <Leader>kk :let @k=@"<CR>
 nnoremap <silent> <leader>rc :lua require("duck").hatch("🐈")<CR>
-nnoremap <silent> <c-w><c-p> <Plug>(coc-float-jump)
