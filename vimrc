@@ -176,12 +176,19 @@ vim.cmd.colorscheme 'catppuccin'
 -- LSP setup
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
-local servers = { 'rust_analyzer', 'zls', 'eslint', 'svelte', 'jsonls', 'vimls', 'ccls' }
+local servers = { 'rust_analyzer', 'zls', 'eslint', 'svelte', 'jsonls', 'nixd', 'vimls', 'ccls', 'cssls' }
 for _, server in ipairs(servers) do
     vim.lsp.config(server, {
         capabilities = capabilities,
     })
 end
+
+vim.lsp.config('eslint', {
+    flags = {
+        allow_incremental_sync = false,
+        debounce_text_changes = 1000,
+    },
+});
 
 local function has_native_ts_preview(root)
     local path = root .. '/node_modules/@typescript/native-preview/package.json'
