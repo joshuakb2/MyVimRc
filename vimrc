@@ -176,7 +176,7 @@ vim.cmd.colorscheme 'catppuccin'
 -- LSP setup
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
-local servers = { 'rust_analyzer', 'zls', 'eslint', 'svelte', 'jsonls', 'nixd', 'vimls', 'ccls', 'cssls' }
+local servers = { 'rust_analyzer', 'zls', 'eslint', 'svelte', 'jsonls', 'nixd', 'vimls', 'ccls', 'cssls', 'phpactor' }
 for _, server in ipairs(servers) do
     vim.lsp.config(server, {
         capabilities = capabilities,
@@ -190,68 +190,71 @@ vim.lsp.config('eslint', {
     },
 });
 
-local function has_native_ts_preview(root)
-    local path = root .. '/node_modules/@typescript/native-preview/package.json'
+-- Read the major version of a project's locally-installed TypeScript.
+local function get_ts_major_version(root)
+    local path = root .. '/node_modules/typescript/package.json'
     local f = io.open(path, 'r')
-    if not f then return false end
+    if not f then return nil end
+    local content = f:read('*a')
     f:close()
-    return true
+    local version = content:match('"version"%s*:%s*"(%d+)')
+    return version and tonumber(version) or nil
 end
 
+local ts_root_markers = { 'tsconfig.json', 'jsconfig.json', 'package.json' }
 local ts_filetypes = { 'typescript', 'typescriptreact', 'javascript', 'javascriptreact' }
 
--- ts_ls: always runs for full IDE features (code actions, auto-import, etc.)
+-- TypeScript 7+ ships a feature-complete native LSP in the `typescript`
+-- package (binary: tsc), so it runs on its own. Older versions use ts_ls.
+-- Exactly one server attaches per project, chosen by the installed version.
+local function project_uses_ts7(bufnr)
+    local root = vim.fs.root(bufnr, ts_root_markers)
+    if not root then return false, nil end
+    local major = get_ts_major_version(root)
+    return (major ~= nil and major >= 7), root
+end
+
+-- ts_ls: TypeScript 6.x and older only.
 vim.lsp.config('ts_ls', {
     capabilities = capabilities,
     filetypes = ts_filetypes,
-    root_markers = { 'tsconfig.json', 'jsconfig.json', 'package.json' },
-    on_attach = function(client, bufnr)
-        local root = vim.fs.root(bufnr, { 'tsconfig.json', 'jsconfig.json', 'package.json' })
-        if root and has_native_ts_preview(root) then
-            -- Let tsgo handle these in TS 7 projects
-            client.server_capabilities.hoverProvider = false
-            client.server_capabilities.definitionProvider = false
-            client.server_capabilities.typeDefinitionProvider = false
-            client.server_capabilities.implementationProvider = false
-            client.server_capabilities.referencesProvider = false
-            client.handlers['textDocument/publishDiagnostics'] = function() end
-        end
+    root_dir = function(bufnr, on_dir)
+        local is_ts7, root = project_uses_ts7(bufnr)
+        if root and not is_ts7 then on_dir(root) end
     end,
 })
 
--- tsgo: runs alongside ts_ls in TS 7 projects for faster diagnostics.
-local tsgo_capabilities = vim.deepcopy(capabilities)
-tsgo_capabilities.general = tsgo_capabilities.general or {}
-tsgo_capabilities.general.positionEncodings = { 'utf-16' }
+-- tsc: the native TypeScript 7+ language server.
+local tsc_capabilities = vim.deepcopy(capabilities)
+tsc_capabilities.general = tsc_capabilities.general or {}
+tsc_capabilities.general.positionEncodings = { 'utf-16' }
 
-vim.lsp.config('tsgo', {
-    capabilities = tsgo_capabilities,
+vim.lsp.config('tsc', {
+    capabilities = tsc_capabilities,
     filetypes = ts_filetypes,
-    root_markers = { 'tsconfig.json', 'jsconfig.json', 'package.json' },
-    on_attach = function(client)
-        -- Let ts_ls handle these; tsgo handles diagnostics + navigation
-        client.server_capabilities.codeActionProvider = false
-        client.server_capabilities.completionProvider = nil
-        client.server_capabilities.renameProvider = false
+    root_dir = function(bufnr, on_dir)
+        local is_ts7, root = project_uses_ts7(bufnr)
+        if is_ts7 then on_dir(root) end
     end,
 })
 
--- Only enable tsgo in projects with @typescript/native-preview
+-- tsc lives in node_modules; point its cmd at the project-local binary
+-- (this autocmd is registered before vim.lsp.enable so it runs first).
 vim.api.nvim_create_autocmd('FileType', {
     pattern = ts_filetypes,
     callback = function(ev)
-        local root = vim.fs.root(ev.buf, { 'package.json' })
-        if root and has_native_ts_preview(root) then
-            vim.lsp.config('tsgo', {
-                cmd = { root .. '/node_modules/.bin/tsgo', '--lsp', '--stdio' },
+        local root = vim.fs.root(ev.buf, ts_root_markers)
+        if root then
+            vim.lsp.config('tsc', {
+                cmd = { root .. '/node_modules/.bin/tsc', '--lsp', '--stdio' },
             })
-            vim.lsp.enable('tsgo', true)
         end
     end,
 })
 
 vim.lsp.enable(servers)
 vim.lsp.enable('ts_ls')
+vim.lsp.enable('tsc')
 
 -- nvim-cmp setup
 local cmp = require('cmp')
