@@ -178,7 +178,7 @@ Plug 'slim-template/vim-slim'
 Plug 'tommcdo/vim-lion'
 Plug 'evanleck/vim-svelte'
 Plug 'sveltejs/language-tools', {'do': 'npm install && npm run build'}
-Plug 'nvim-treesitter/nvim-treesitter'
+Plug 'nvim-treesitter/nvim-treesitter', { 'branch': 'main', 'do': ':TSUpdate' }
 Plug 'nvim-treesitter/nvim-treesitter-context'
 Plug 'joshuakb2/nvim-catppuccin' " Color scheme
 let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowToggle
