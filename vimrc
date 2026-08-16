@@ -12,21 +12,6 @@ set listchars=tab:>-
 
 set wildmode=longest:full,full
 
-" Toggle between tabs and spaces
-function! ToggleTabs()
-    if &expandtab
-        set softtabstop=0
-        let &shiftwidth=&tabstop
-        set noexpandtab
-        echom "Tab will insert a real tab."
-    else
-        set softtabstop=4
-        set shiftwidth=4
-        set expandtab
-        echom "Tab will insert spaces."
-    endif
-endfunction
-
 " Run with :call WorkaroundLuaHighlightBug()
 function! WorkaroundLuaHighlightBug()
     execute '!curl -sS https://raw.githubusercontent.com/neovim/neovim/v0.7.2/runtime/syntax/lua.vim | sudo tee $VIMRUNTIME/syntax/lua.vim'
@@ -34,8 +19,8 @@ endfunction
 
 " Map CTRL-P to the opposite of CTRL-O -- go forward in cursor jump list
 nnoremap <c-p> <tab>
-" Map ToggleTabs() to the Tab key in normal mode
-nmap <Tab> mz:call ToggleTabs()<CR>
+" Map toggle_tabs() to the Tab key in normal mode
+nmap <Tab> :lua toggle_tabs()<CR>
 
 " Map Ctrl-W h and Ctrl-W l to switch between the left and right windows
 nnoremap <c-w>h <c-w><Left>
@@ -45,33 +30,80 @@ function! RunCmd(cmd)
     return substitute(system(a:cmd), '\n$', '', '')
 endfunction
 
-" Look in each directory above the opened file for a .tabs or .spaces file
-" If we find a .spaces file, then use spaces.
-" If we find a .tabs file, then use real tabs.
-" If we don't find anything, then use spaces.
-function! ChooseDefaultTabs(dir)
-    let x = RunCmd("[ -f " . a:dir . "/.spaces ]")
+lua << EOF
+-- Look in each directory above the opened file for a .tabs or .spaces file
+-- If we find a .spaces file, then use spaces.
+-- If we find a .tabs file, then use real tabs.
+-- If the file has content, it is expected to be the width of an indentation.
+-- If we don't find anything, then use 4 spaces.
+local function choose_default_tabs(dir)
+    local x = vim.system({ "cat", dir .. "/.spaces" }, { text = true }):wait()
+    if x.code == 0 then
+        return {
+            type = "spaces",
+            width = (tonumber(x.stdout) or 4),
+        }
+    end
 
-    if v:shell_error == 0
-        return "spaces"
-    endif
+    x = vim.system({ "cat", dir .. "/.tabs" }, { text = true }):wait()
+    if x.code == 0 then
+        return {
+            type = "tabs",
+            width = (tonumber(x.stdout) or 4),
+        }
+    end
 
-    let y = RunCmd("[ -f " . a:dir . "/.tabs ]")
+    if dir == "/" then
+        return {
+            type = "spaces",
+            width = 4,
+        }
+    end
 
-    if v:shell_error == 0
-        return "tabs"
-    endif
+    return choose_default_tabs(vim.system({ "dirname", dir }, { text = true }):wait().stdout:gsub("%s*$", ""))
+end
 
-    if a:dir == "/"
-        return "spaces"
-    endif
+tabwidth = 4
 
-    return ChooseDefaultTabs(RunCmd("dirname " . a:dir))
-endfunction
+-- Toggle between tabs and spaces
+function _G.toggle_tabs()
+    if vim.opt.expandtab:get() then
+        _G.set_tabs("tabs")
+    else
+        _G.set_tabs("spaces")
+    end
+end
 
-if isdirectory(expand("%:p:h")) && ChooseDefaultTabs(expand("%:p:h")) == "tabs"
-    silent :call ToggleTabs()
-endif
+function _G.set_tabs(type, width)
+    if width then
+        _G.tabwidth = width
+    else
+        width = _G.tabwidth
+    end
+
+    if type == "tabs" then
+        vim.opt.softtabstop = 0
+        vim.opt.shiftwidth = width
+        vim.opt.tabstop = width
+        vim.opt.expandtab = false
+        print "Tab will insert a real tab."
+    else
+        vim.opt.softtabstop = width
+        vim.opt.shiftwidth = width
+        vim.opt.expandtab = true
+        print "Tab will insert spaces."
+    end
+end
+
+vim.api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
+    callback = function()
+        if vim.fn.isdirectory(vim.fn.expand("%:p:h")) then
+            local tabs = choose_default_tabs(vim.fn.expand("%:p:h"))
+            set_tabs(tabs.type, tabs.width)
+        end
+    end,
+})
+EOF
 
 " Put tabs back to normal for makefiles because make requires real tabs.
 if has("autocmd")
