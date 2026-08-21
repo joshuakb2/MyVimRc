@@ -208,7 +208,7 @@ vim.cmd.colorscheme 'catppuccin'
 -- LSP setup
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
-local servers = { 'rust_analyzer', 'zls', 'eslint', 'svelte', 'jsonls', 'nixd', 'vimls', 'ccls', 'cssls', 'phpactor' }
+local servers = { 'rust_analyzer', 'zls', 'eslint', 'svelte', 'jsonls', 'nixd', 'vimls', 'ccls', 'cssls', 'phpactor', 'gopls' }
 for _, server in ipairs(servers) do
     vim.lsp.config(server, {
         capabilities = capabilities,
