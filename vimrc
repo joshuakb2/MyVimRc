@@ -22,9 +22,15 @@ nnoremap <c-p> <tab>
 " Map toggle_tabs() to the Tab key in normal mode
 nmap <Tab> :lua toggle_tabs()<CR>
 
-" Map Ctrl-W h and Ctrl-W l to switch between the left and right windows
+" Map ctrl-W [hjkl] to select the window in that direction and ctrl-w ctrl-[hjkl] to move the current window in that direction
+nnoremap <c-w><c-h> <c-w>H
+nnoremap <c-w><c-l> <c-w>L
+nnoremap <c-w><c-j> <c-w>J
+nnoremap <c-w><c-k> <c-w>K
 nnoremap <c-w>h <c-w><Left>
 nnoremap <c-w>l <c-w><Right>
+nnoremap <c-w>j <c-w><Down>
+nnoremap <c-w>k <c-w><Up>
 
 function! RunCmd(cmd)
     return substitute(system(a:cmd), '\n$', '', '')
