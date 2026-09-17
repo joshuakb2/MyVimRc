@@ -109,6 +109,8 @@ vim.api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
         end
     end,
 })
+
+vim.filetype.add { extension = { runghc = "haskell" } }
 EOF
 
 " Put tabs back to normal for makefiles because make requires real tabs.
