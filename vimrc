@@ -186,7 +186,9 @@ Plug 'evanleck/vim-svelte'
 Plug 'sveltejs/language-tools', {'do': 'npm install && npm run build'}
 Plug 'nvim-treesitter/nvim-treesitter', { 'branch': 'main', 'do': ':TSUpdate' }
 Plug 'nvim-treesitter/nvim-treesitter-context'
+Plug 'stevearc/aerial.nvim'
 Plug 'joshuakb2/nvim-catppuccin' " Color scheme
+Plug 'joshuakb2/nvim-nix-shebang' " filetype detection in nix-shell and nix shell shebang files
 let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowToggle
 let b:lion_squeeze_spaces = 1 " allow lion to reduce number of spaces when aligning columns
 call plug#end()
@@ -197,6 +199,7 @@ require('telescope').setup{
         file_ignore_patterns = {"node_modules", ".git"}
     }
 }
+require('aerial').setup{}
 require('project').setup{
     patterns = {'.git', '.project_root'}
 }
@@ -368,5 +371,6 @@ nnoremap <silent> <Leader>fd <cmd>lua vim.lsp.buf.format()<CR>
 vmap <silent> <Leader>dp diffput
 nnoremap <Leader>ff <cmd>Telescope find_files<cr>
 nnoremap <Leader>fg <cmd>Telescope live_grep<cr>
+nnoremap <Leader>a <cmd>AerialToggle left<cr>
 nnoremap <Leader>kk :let @k=@"<CR>
 nnoremap <silent> <leader>rc :lua require("duck").hatch("🐈")<CR>
