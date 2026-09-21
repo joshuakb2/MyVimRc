@@ -75,8 +75,10 @@ tabwidth = 4
 function _G.toggle_tabs()
     if vim.opt.expandtab:get() then
         _G.set_tabs("tabs")
+        print "Tab will insert a real tab."
     else
         _G.set_tabs("spaces")
+        print "Tab will insert spaces."
     end
 end
 
@@ -92,12 +94,10 @@ function _G.set_tabs(type, width)
         vim.opt.shiftwidth = width
         vim.opt.tabstop = width
         vim.opt.expandtab = false
-        print "Tab will insert a real tab."
     else
         vim.opt.softtabstop = width
         vim.opt.shiftwidth = width
         vim.opt.expandtab = true
-        print "Tab will insert spaces."
     end
 end
 
