@@ -219,7 +219,7 @@ vim.cmd.colorscheme 'catppuccin'
 -- LSP setup
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
-local servers = { 'rust_analyzer', 'zls', 'eslint', 'svelte', 'jsonls', 'nixd', 'vimls', 'ccls', 'cssls', 'phpactor', 'gopls', 'tailwindcss' }
+local servers = { 'rust_analyzer', 'zls', 'eslint', 'svelte', 'jsonls', 'nixd', 'vimls', 'ccls', 'cssls', 'phpactor', 'gopls', 'tailwindcss', 'oxlint' }
 for _, server in ipairs(servers) do
     vim.lsp.config(server, {
         capabilities = capabilities,
@@ -227,6 +227,13 @@ for _, server in ipairs(servers) do
 end
 
 vim.lsp.config('eslint', {
+    flags = {
+        allow_incremental_sync = false,
+        debounce_text_changes = 1000,
+    },
+})
+
+vim.lsp.config('oxlint', {
     flags = {
         allow_incremental_sync = false,
         debounce_text_changes = 1000,
@@ -295,9 +302,37 @@ vim.api.nvim_create_autocmd('FileType', {
     end,
 })
 
-vim.lsp.enable(servers)
-vim.lsp.enable('ts_ls')
-vim.lsp.enable('tsc')
+function enableIfAvailable(server)
+    local config = vim.lsp.config[server]
+    local exe = nil
+    if type(config.cmd) == 'table' and #config.cmd > 0 then
+        exe = config.cmd[1]
+    end
+    if exe == nil then
+        local cmd = config.cmd
+        vim.lsp.config(server, {
+            cmd = function(dispatchers, config)
+                local success, rpc = pcall(cmd, dispatchers, config)
+                if not success then
+                    vim.lsp.enable(server, false)
+                    return vim.lsp.rpc.start({ 'true' }, dispatchers)
+                end
+                return rpc
+            end
+        })
+        vim.lsp.enable(server)
+        return
+    end
+    if vim.fn.executable(exe) == 1 then
+        vim.lsp.enable(server)
+    end
+end
+
+for _, server in ipairs(servers) do
+    enableIfAvailable(server)
+end
+enableIfAvailable('ts_ls')
+enableIfAvailable('tsc')
 
 -- nvim-cmp setup
 local cmp = require('cmp')
@@ -358,7 +393,7 @@ nmap <silent> gd <cmd>lua vim.lsp.buf.definition()<CR>
 nmap <silent> gy <cmd>lua vim.lsp.buf.type_definition()<CR>
 nmap <silent> gi <cmd>lua vim.lsp.buf.implementation()<CR>
 nmap <silent> gr <cmd>lua vim.lsp.buf.references()<CR>
-nmap <silent> rs <cmd>lua vim.lsp.buf.rename()<CR>
+nmap <silent> <Leader>rs <cmd>lua vim.lsp.buf.rename()<CR>
 nmap <silent> <Leader>ca <cmd>lua vim.lsp.buf.code_action()<CR>
 nmap <silent> <Leader>df <cmd>lua vim.diagnostic.jump({ count = 1, on_jump = open_float })<CR>
 nmap <silent> <Leader>dr <cmd>lua vim.diagnostic.jump({ count = -1, on_jump = open_float })<CR>
