@@ -350,8 +350,6 @@ function open_float()
         vim.diagnostic.open_float({ scope = 'cursor' })
     end)
 end
-
-require('tsgo_project_diagnostics')
 EOF
 
 hi TreesitterContext guibg=grey
@@ -364,8 +362,7 @@ nmap <silent> rs <cmd>lua vim.lsp.buf.rename()<CR>
 nmap <silent> <Leader>ca <cmd>lua vim.lsp.buf.code_action()<CR>
 nmap <silent> <Leader>df <cmd>lua vim.diagnostic.jump({ count = 1, on_jump = open_float })<CR>
 nmap <silent> <Leader>dr <cmd>lua vim.diagnostic.jump({ count = -1, on_jump = open_float })<CR>
-" (see tsgo_project_diagnostics.lua)
-" nmap <silent> <Leader>di <cmd>lua vim.diagnostic.setqflist()<CR>
+nmap <silent> <Leader>di <cmd>lua vim.diagnostic.setqflist({ open = true })<CR>
 nnoremap <silent> K <cmd>lua vim.lsp.buf.hover()<CR>
 nnoremap <silent> <Space> :set hlsearch!<CR>
 vmap <silent> <Leader>fs <cmd>lua vim.lsp.buf.format()<CR>
