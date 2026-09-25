@@ -199,7 +199,15 @@ call plug#end()
 lua << EOF
 require('telescope').setup{
     defaults = {
-        file_ignore_patterns = {"node_modules", ".git"}
+        file_ignore_patterns = {"node_modules", ".git"},
+        mappings = {
+            i = {
+                ["<C-h>"] = "preview_scrolling_left",
+                ["<C-j>"] = "preview_scrolling_down",
+                ["<C-k>"] = "preview_scrolling_up",
+                ["<C-l>"] = "preview_scrolling_right",
+            },
+        },
     }
 }
 require('aerial').setup{}
@@ -417,7 +425,7 @@ vmap <silent> <Leader>fs <cmd>lua require('conform').format()<CR>
 nnoremap <silent> <Leader>fd <cmd>lua require('conform').format()<CR>
 vmap <silent> <Leader>dp diffput
 nnoremap <Leader>ff <cmd>Telescope find_files<cr>
-nnoremap <Leader>fg <cmd>Telescope live_grep<cr>
+nnoremap <Leader>fg <cmd>Telescope grep_string<cr>
 nnoremap <Leader>a <cmd>AerialToggle left<cr>
 nnoremap <Leader>kk :let @k=@"<CR>
 nnoremap <silent> <leader>rc :lua require("duck").hatch("🐈")<CR>
