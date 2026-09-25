@@ -189,6 +189,7 @@ Plug 'sveltejs/language-tools', {'do': 'npm install && npm run build'}
 Plug 'nvim-treesitter/nvim-treesitter', { 'branch': 'main', 'do': ':TSUpdate' }
 Plug 'nvim-treesitter/nvim-treesitter-context'
 Plug 'stevearc/aerial.nvim'
+Plug 'stevearc/conform.nvim'
 Plug 'joshuakb2/nvim-catppuccin' " Color scheme
 Plug 'joshuakb2/nvim-nix-shebang' " filetype detection in nix-shell and nix shell shebang files
 let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowToggle
@@ -202,6 +203,18 @@ require('telescope').setup{
     }
 }
 require('aerial').setup{}
+require('conform').setup {
+    formatters_by_ft = {
+        -- javascript = { 'oxfmt', 'tsc', 'ts_ls', stop_after_first = true },
+        -- typescript = { 'oxfmt', 'tsc', 'ts_ls', stop_after_first = true },
+        -- javascriptreact = { 'oxfmt', 'tsc', 'ts_ls', stop_after_first = true },
+        -- typescriptreact = { 'oxfmt', 'tsc', 'ts_ls', stop_after_first = true },
+        javascript = { 'oxfmt', stop_after_first = true },
+        typescript = { 'oxfmt', stop_after_first = true },
+        javascriptreact = { 'oxfmt', stop_after_first = true },
+        typescriptreact = { 'oxfmt', stop_after_first = true },
+    },
+}
 require('project').setup{
     patterns = {'.git', '.project_root'}
 }
@@ -219,7 +232,7 @@ vim.cmd.colorscheme 'catppuccin'
 -- LSP setup
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
-local servers = { 'rust_analyzer', 'zls', 'eslint', 'svelte', 'jsonls', 'nixd', 'vimls', 'ccls', 'cssls', 'phpactor', 'gopls', 'tailwindcss', 'oxlint' }
+local servers = { 'rust_analyzer', 'zls', 'eslint', 'svelte', 'jsonls', 'nixd', 'vimls', 'ccls', 'cssls', 'phpactor', 'gopls', 'tailwindcss', 'oxlint', 'oxfmt' }
 for _, server in ipairs(servers) do
     vim.lsp.config(server, {
         capabilities = capabilities,
@@ -400,8 +413,8 @@ nmap <silent> <Leader>dr <cmd>lua vim.diagnostic.jump({ count = -1, on_jump = op
 nmap <silent> <Leader>di <cmd>lua vim.diagnostic.setqflist({ open = true })<CR>
 nnoremap <silent> K <cmd>lua vim.lsp.buf.hover()<CR>
 nnoremap <silent> <Space> :set hlsearch!<CR>
-vmap <silent> <Leader>fs <cmd>lua vim.lsp.buf.format()<CR>
-nnoremap <silent> <Leader>fd <cmd>lua vim.lsp.buf.format()<CR>
+vmap <silent> <Leader>fs <cmd>lua require('conform').format()<CR>
+nnoremap <silent> <Leader>fd <cmd>lua require('conform').format()<CR>
 vmap <silent> <Leader>dp diffput
 nnoremap <Leader>ff <cmd>Telescope find_files<cr>
 nnoremap <Leader>fg <cmd>Telescope live_grep<cr>
